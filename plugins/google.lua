@@ -2,7 +2,8 @@ function info()
     return {
         bindings = {"g", "google"},
         description = "Google search",
-        example = "g rust programming"
+        example = "g rust programming",
+        suggest_url = "https://suggestqueries.google.com/complete/search?client=firefox&q=%s"
     }
 end
 

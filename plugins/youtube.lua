@@ -4,7 +4,8 @@ function info()
     return {
         bindings = {"yt", "youtube"},
         description = "Navigate to YouTube or search videos",
-        example = "yt rust tutorial"
+        example = "yt rust tutorial",
+        suggest_url = "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=%s"
     }
 end
 

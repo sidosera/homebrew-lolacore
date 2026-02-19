@@ -2,7 +2,8 @@ function info()
     return {
         bindings = {"ddg", "duckduckgo"},
         description = "DuckDuckGo search",
-        example = "ddg privacy browser"
+        example = "ddg privacy browser",
+        suggest_url = "https://duckduckgo.com/ac/?q=%s&type=list"
     }
 end
 
