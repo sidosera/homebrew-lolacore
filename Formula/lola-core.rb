@@ -14,10 +14,10 @@ class LolaCore < Formula
   end
 
   def install
-    (etc/"bunnylol/commands"/name).install Dir["plugins/*.lua"]
+    (share/"bunnylol/commands"/name).install Dir["plugins/*.lua"]
   end
 
   test do
-    assert_predicate etc/"bunnylol/commands"/name, :directory?
+    assert_predicate share/"bunnylol/commands"/name, :directory?
   end
 end
