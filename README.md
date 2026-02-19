@@ -1,13 +1,20 @@
 # Bunnylol Plugins
 
-Homebrew tap for [Bunnylol](https://github.com/sidosera/bunnylol.rs) commands.
+Homebrew tap for [Bunnylol](https://github.com/sidosera/lolabunny.app) commands.
 
 ## Installation
 
 ```bash
 brew tap sidosera/lolabunny
-brew install lola-core
+brew install --cask bunnylol   # macOS menu bar app
+brew install lola-core         # core plugins (github, instagram, youtube, etc.)
 ```
+
+## Plugin Location
+
+Plugins are installed to `~/.local/share/bunnylol/commands/` (XDG data directory).
+
+You can also drop custom `.lua` files there directly.
 
 ## Creating Your Own Plugin
 

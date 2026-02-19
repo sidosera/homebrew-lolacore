@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  package:
+    name: Package plugins
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: meta
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.0-dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create archive
+        run: tar czf "lola-core-${{ steps.meta.outputs.version }}.tar.gz" plugins/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lola-core
+          path: "*.tar.gz"
+          retention-days: 90
+
+  release:
+    name: Publish release
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: lola-core
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.tar.gz"
+          generate_release_notes: true
+
+  update-formula:
+    name: Update Homebrew formula
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Compute SHA256 of release asset
+        id: meta
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          URL="https://github.com/sidosera/homebrew-lolacore/releases/download/${GITHUB_REF_NAME}/lola-core-${VERSION}.tar.gz"
+          SHA=""
+          for i in 1 2 3 4 5; do
+            SHA=$(curl -fsSL "$URL" | shasum -a 256 | cut -d' ' -f1) && break
+            echo "Retry $i — asset not ready"
+            sleep 5
+          done
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "url=$URL"         >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA"      >> "$GITHUB_OUTPUT"
+
+      - name: Write formula
+        run: |
+          cat > Formula/lola-core.rb << EOF
+          class LolaCore < Formula
+            desc "Core command plugins for Bunnylol"
+            homepage "https://github.com/sidosera/homebrew-lolacore"
+            url "${{ steps.meta.outputs.url }}"
+            sha256 "${{ steps.meta.outputs.sha256 }}"
+            license "MIT"
+
+            livecheck do
+              url "https://github.com/sidosera/homebrew-lolacore/releases/latest"
+              regex(/v?(\d+(?:\.\d+)+)/i)
+            end
+
+            def install
+              (etc/"bunnylol/commands"/name).install Dir["plugins/*.lua"]
+            end
+
+            test do
+              assert_predicate etc/"bunnylol/commands"/name, :directory?
+            end
+          end
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/lola-core.rb
+          git diff --staged --quiet || git commit -m "lola-core ${{ steps.meta.outputs.version }}"
+          git push

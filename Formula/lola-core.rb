@@ -1,27 +1,23 @@
 class LolaCore < Formula
-  desc "Core Lua command plugins for Bunnylol"
-  homepage "https://github.com/sidosera/homebrew-lolabunny"
-  url "https://github.com/sidosera/homebrew-lolabunny/archive/refs/heads/main.tar.gz"
-  version "1.0.0"
+  desc "Core command plugins for Bunnylol"
+  homepage "https://github.com/sidosera/homebrew-lolacore"
+  url "https://github.com/sidosera/homebrew-lolacore/archive/refs/heads/main.tar.gz"
+  version "0.0.1"
   sha256 :no_check
   license "MIT"
 
+  head "https://github.com/sidosera/homebrew-lolacore.git", branch: "main"
+
+  livecheck do
+    url "https://github.com/sidosera/homebrew-lolacore/releases/latest"
+    regex(/v?(\d+(?:\.\d+)+)/i)
+  end
+
   def install
-    (share/"bunnylol/commands").install Dir["plugins/*.lua"]
+    (etc/"bunnylol/commands"/name).install Dir["plugins/*.lua"]
   end
 
-  def post_install
-    plugins_dir = Pathname.new(Dir.home)/".bunnylol/commands"
-    plugins_dir.mkpath
-    
-    Dir[share/"bunnylol/commands/*.lua"].each do |plugin|
-      ln_sf plugin, plugins_dir/File.basename(plugin)
-    end
-  end
-
-  def caveats
-    <<~EOS
-      LolaBunny plugins installed at ~/.bunnylol/commands/
-    EOS
+  test do
+    assert_predicate etc/"bunnylol/commands"/name, :directory?
   end
 end
